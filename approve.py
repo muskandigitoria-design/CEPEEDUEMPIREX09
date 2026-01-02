@@ -19,6 +19,7 @@ Best option choose karne ke liye
 please simple questions ka answer dijiye 👇
 """
 
+
 MARKET_QUESTION = """
 *✅ QUESTION 1: MARKET INTEREST*
 1️⃣ Aap kis market me interested ho?
@@ -52,30 +53,35 @@ Admin ko message karein
 Team aapse directly connect karegi 😊
 """
 
-@bot.on(events.ChatAction)
-async def join_handler(event):
-    if event.user_joined or event.user_added:
-        user = await event.get_user()
-        name = user.first_name
 
-        await event.reply(f"User Approved Automatically ✅\nWelcome {name}")
+# ================= AUTO APPROVE JOIN REQUEST =================
+@bot.on(events.ChatJoinRequest)
+async def approve(event):
+    user = await event.get_user()
+    name = user.first_name
 
-        try:
-            await bot.send_message(
-                user.id,
-                WELCOME_MESSAGE,
-                buttons=[
-                    [
-                        Button.url("⭐ Join Our Group", "https://t.me/+GiwKjDnCWNNhMGQ1"),
-                        Button.url("📩 Contact Admin", "https://t.me/TRADEwithSHAANVii")
-                    ],
-                    [Button.inline("Continue ▶️", b"start")]
+    await event.approve()
+    print(f"{name} Approved Automatically ✔️")
+
+    # Send DM
+    try:
+        await bot.send_message(
+            user.id,
+            WELCOME_MESSAGE,
+            buttons=[
+                [
+                    Button.url("⭐ Join Our Group", "https://t.me/+GiwKjDnCWNNhMGQ1"),
+                    Button.url("📩 Contact Admin", "https://t.me/TRADEwithSHAANVii")
                 ],
-                parse_mode="markdown"
-            )
-        except:
-            print("DM CLOSED ❌")
+                [Button.inline("Continue ▶️", b"start")]
+            ],
+            parse_mode="markdown"
+        )
+    except:
+        print("DM CLOSED ❌")
 
+
+# ================= FLOW =================
 @bot.on(events.CallbackQuery(data=b"start"))
 async def q1(event):
     await event.edit(
@@ -85,6 +91,7 @@ async def q1(event):
             [Button.inline("💱 Forex Market", b"forex")]
         ]
     )
+
 
 @bot.on(events.CallbackQuery(pattern=b"(stock|forex)"))
 async def q2(event):
@@ -96,6 +103,7 @@ async def q2(event):
         ]
     )
 
+
 @bot.on(events.CallbackQuery(data=b"premium"))
 async def premium_plan(event):
     await event.edit(
@@ -106,6 +114,7 @@ async def premium_plan(event):
             [Button.inline("⭐ ₹21,999 Lifetime", b"p3")]
         ]
     )
+
 
 @bot.on(events.CallbackQuery(data=b"account"))
 async def account(event):
@@ -119,6 +128,7 @@ async def account(event):
         ]
     )
 
+
 @bot.on(events.CallbackQuery())
 async def final(event):
     await event.edit(
@@ -131,10 +141,11 @@ async def final(event):
         ]
     )
 
+
 async def main():
-    print("Starting Userbot...")
+    print("Userbot Starting...")
     await bot.start()
-    print("Userbot Started Successfully 🎉")
+    print("Auto Approve Bot LIVE 🚀")
     await bot.run_until_disconnected()
 
 asyncio.run(main())
