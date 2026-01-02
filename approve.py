@@ -1,14 +1,19 @@
 import asyncio
 import os
-from telethon import TelegramClient, events, Button
+from telethon import TelegramClient, events, Button, functions
 from telethon.sessions import StringSession
+from telethon.tl.types import UpdateBotChatInviteRequester
 
+
+# ================= ENV VARIABLES =================
 api_id = int(os.getenv("API_ID"))
 api_hash = os.getenv("API_HASH")
 string = os.getenv("STRING_SESSION")
 
 bot = TelegramClient(StringSession(string), api_id, api_hash)
 
+
+# ================= TEXTS =================
 WELCOME_MESSAGE = """
 ✨ *WELCOME TO CE & PE EDUEMPIREX 📈*
 
@@ -18,7 +23,6 @@ aur real-time market based guidance provide karte hain.
 Best option choose karne ke liye  
 please simple questions ka answer dijiye 👇
 """
-
 
 MARKET_QUESTION = """
 *✅ QUESTION 1: MARKET INTEREST*
@@ -54,31 +58,42 @@ Team aapse directly connect karegi 😊
 """
 
 
-# ================= AUTO APPROVE JOIN REQUEST =================
-@bot.on(events.ChatJoinRequest)
-async def approve(event):
-    user = await event.get_user()
-    name = user.first_name
+# ================= AUTO APPROVE + DM =================
+@bot.on(events.Raw)
+async def auto_approve(event):
+    if isinstance(event, UpdateBotChatInviteRequester):
 
-    await event.approve()
-    print(f"{name} Approved Automatically ✔️")
+        user = await bot.get_entity(event.user_id)
+        name = user.first_name
 
-    # Send DM
-    try:
-        await bot.send_message(
-            user.id,
-            WELCOME_MESSAGE,
-            buttons=[
-                [
-                    Button.url("⭐ Join Our Group", "https://t.me/+GiwKjDnCWNNhMGQ1"),
-                    Button.url("📩 Contact Admin", "https://t.me/TRADEwithSHAANVii")
+        try:
+            await bot(functions.messages.HideChatJoinRequestRequest(
+                approved=True,
+                peer=event.peer,
+                user_id=event.user_id
+            ))
+
+            print(f"{name} Approved Automatically ✔️")
+
+        except Exception as e:
+            print("Approve Failed ❌", e)
+
+        # SEND DM
+        try:
+            await bot.send_message(
+                user.id,
+                WELCOME_MESSAGE,
+                buttons=[
+                    [
+                        Button.url("⭐ Join Our Group", "https://t.me/+GiwKjDnCWNNhMGQ1"),
+                        Button.url("📩 Contact Admin", "https://t.me/TRADEwithSHAANVii")
+                    ],
+                    [Button.inline("Continue ▶️", b"start")]
                 ],
-                [Button.inline("Continue ▶️", b"start")]
-            ],
-            parse_mode="markdown"
-        )
-    except:
-        print("DM CLOSED ❌")
+                parse_mode="markdown"
+            )
+        except:
+            print("DM CLOSED ❌")
 
 
 # ================= FLOW =================
@@ -105,7 +120,7 @@ async def q2(event):
 
 
 @bot.on(events.CallbackQuery(data=b"premium"))
-async def premium_plan(event):
+async def premium(event):
     await event.edit(
         PREMIUM_PLANS,
         buttons=[
@@ -142,10 +157,11 @@ async def final(event):
     )
 
 
+# ================= RUN =================
 async def main():
-    print("Userbot Starting...")
+    print("Starting Userbot...")
     await bot.start()
-    print("Auto Approve Bot LIVE 🚀")
+    print("Userbot Started Successfully 🎉")
     await bot.run_until_disconnected()
 
 asyncio.run(main())
